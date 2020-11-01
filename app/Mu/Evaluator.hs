@@ -2,7 +2,10 @@ module Mu.Evaluator (Evaluator, Aliases, evaluate) where
 
 import Control.Monad.State
 import qualified Data.Map.Strict as M
+import qualified Data.Text as T
 import Mu.Parser
+import Debug.Trace
+import Mu.Util
 
 alphaConvert :: AST -> Identifier -> AST -> AST
 alphaConvert (Variable n) v r
@@ -31,7 +34,8 @@ reduce :: AST -> AST
 reduce ast =
   let ast' = betaReduce ast
    in if ast /= ast'
-        then reduce ast'
+        then 
+          trace (T.unpack (prettyAST ast)) reduce ast'
         else ast
 
 -- | Map to retrieve an expression by its alias.
