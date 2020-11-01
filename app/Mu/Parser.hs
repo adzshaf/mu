@@ -49,7 +49,7 @@ parenthesized p = do
 
 -- | Parse an identifier for an alias.
 aliasIdent :: Parser Identifier
-aliasIdent = T.pack <$> lexeme (M.some alphaNumChar)
+aliasIdent = T.pack <$> lexeme (M.some $ alphaNumChar <|> char '+' <|> char '*' <|> char '∧' <|> char '∨' <|> char '¬' <|> char '&' <|> char '∥')
 
 -- | Parse an identifier for a variable.
 varIdent :: Parser Identifier
