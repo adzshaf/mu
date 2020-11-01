@@ -4,11 +4,34 @@ import System.IO
 import Control.Monad.State
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
-import Data.List (intercalate)
+import Data.List
 import Text.Megaparsec
 import Mu.Parser
 import Mu.Evaluator
 import Mu.Util
+import Data.Maybe
+
+-- find index of 9, it will return Nothing if we cannot find bracket
+findBracket :: [Char] -> Maybe Int
+findBracket string = elemIndex '(' string
+
+-- findBracket may returns Nothing, so removeMaybe will return -1 if findBracket returns Nothing
+removeMaybe :: [Char] -> Int
+removeMaybe string = fromMaybe (-1) $ (findBracket string)
+
+-- remove prefix from string
+removePrefix :: [Char] -> [Char]
+removePrefix string = do
+  let index = removeMaybe string
+  drop index string
+
+-- helper to remove prefix from string
+fromNumeral :: [Char] -> [Char]
+fromNumeral string = removePrefix string
+
+-- count how many letters that equal to char
+countLetters :: Eq a => [a] -> a -> Int
+countLetters str char = length $ filter (== char) str
 
 run :: Aliases -> T.Text -> IO Aliases
 run as source =
@@ -18,7 +41,24 @@ run as source =
       return as
     Right exprs -> do
       let (res, as') = runState (sequence $ map evaluate exprs) as
-      putStrLn $ intercalate " ; " $ map (T.unpack . prettyAST) res
+      let result = intercalate " ; " $ map (T.unpack . prettyAST) res
+      let toString = show result
+      putStrLn $ result
+
+      let toDigit = countLetters (fromNumeral toString) 'z'
+      let checkIfZero = removeMaybe toString
+      if result == "λx.λy.x"
+        then print $ True
+        else 
+          if result == "λx.λy.y"
+            then print $ False
+            else
+            if checkIfZero == -1
+              then print $ 0
+              else 
+                if toDigit > 0
+                  then print $ toDigit
+                  else print $ countLetters (fromNumeral toString) 'y'
       return as'
 
 -- Same as run, but return without IO (not evaluating directly the inputs) 
@@ -29,7 +69,7 @@ runWithoutIO as source =
     Right exprs -> do
       let (_, as') = runState (sequence $ map evaluate exprs) as
       as'
-      
+
 repl :: Aliases -> IO ()
 repl as = do
   putStr "> "
